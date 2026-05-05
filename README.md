@@ -11,12 +11,11 @@ I programmed this all by myself, no vibe coding whatsoever (although I did have 
 
 ## Installation Instructions
 Dependencies: pipewire, Qt 5 or higher
+
 Also requires: [uwarevoice](https://github.com/Uwaan/uwarevoice) server to connect to, which can run on this computer or a remote computer.
 
 ```
-> git clone https://github.com/Uwaan/uwavclient
-> cd uwavclient
-> ./uwavclient
+I'll make installation instructions later once there's a packaged release, for now just compile it and run it using qt creator ok thanks bye
 ```
 
 ## Troubleshooting
