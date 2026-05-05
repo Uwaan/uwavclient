@@ -5,5 +5,5 @@ This client uses on a C++ implementation of the [Socket.IO](https://socket.io/) 
 
 That implementation also relies on:
 - [websocketpp](https://github.com/zaphoyd/websocketpp) by Peter Thorson
-- [RapidJSON](https://github.com/socketio/socket.io-client-cpp) by Tencent/THL A29 Limited, and Milo Yip
+- [RapidJSON](https://github.com/Tencent/rapidjson) by Tencent/THL A29 Limited, and Milo Yip
 - [Asio](https://github.com/chriskohlhoff/asio) by about 100 people, but primarily Christopher Kohlhoff
