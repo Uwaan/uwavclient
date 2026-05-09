@@ -1,13 +1,13 @@
 #ifndef UWAVCLIENT_H
 #define UWAVCLIENT_H
 
-#include "u_audioprovider.h"
 #include "sio/sio_socket.h"
 #include "sio/sio_client.h"
+#include "u_audioprovider.h"
 #include "localconfig.h"
 #include <QMainWindow>
 
-Q_DECLARE_METATYPE(std::string)
+//Q_DECLARE_METATYPE(std::string)
 Q_DECLARE_METATYPE(sio::client::close_reason)
 Q_DECLARE_METATYPE(sio::message::list)
 
@@ -124,6 +124,10 @@ private slots:
     void on_sliderGateRMS_sliderReleased();
 
     void on_buttonServerExit_clicked();
+
+    void on_comboInferDevice_currentIndexChanged(int index);
+
+    void on_comboModel_currentIndexChanged(int index);
 
 signals:
     void signalSioConnectFail();

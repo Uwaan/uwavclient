@@ -21,6 +21,16 @@ set(PROJECT_SOURCES
         main.cpp
         uwavclient.cpp
         uwavclient.h
+        u_audioprovider.cpp
+        u_audioprovider.h
+        localconfig.cpp
+        localconfig.h
+        u_enginestatistics.cpp
+        u_enginestatistics.h
+        u_interfacedescriptor.h
+        u_ringbuffer.cpp
+        u_ringbuffer.h
+        u_sharedfunctions.h
         uwavclient.ui
 )
 

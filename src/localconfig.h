@@ -7,6 +7,8 @@ struct u_ConfigData {
     std::string clientID = "";
     std::string inputDevice = "";
     std::string outputDevice = "";
+    std::string inferDevice = "";
+    std::string modelName = "";
 };
 
 class LocalConfig
@@ -20,8 +22,12 @@ public:
 
     std::string GetSavedInputDevice();
     std::string GetSavedOutputDevice();
+    std::string GetSavedInferDevice();
+    std::string GetSavedModelName();
     void SetSavedInputDevice(std::string name);
     void SetSavedOutputDevice(std::string name);
+    void SetSavedInferDevice(std::string name);
+    void SetSavedModelName(std::string name);
     std::string GetClientID();
 
 private:

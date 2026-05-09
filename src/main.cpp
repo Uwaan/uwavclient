@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QStyleFactory>
 #include <pipewire/pipewire.h>
 #include "u_audioprovider.h"
 #include "uwavclient.h"
@@ -63,6 +64,7 @@ int main(int argc, char *argv[])
 {
     oldMessageHandler = qInstallMessageHandler(LogMessageToWindow);
     QApplication a(argc, argv);
+    QApplication::setStyle(QStyleFactory::create("Fusion"));
     UwaVClient w;
     uvc = &w;
     w.show();

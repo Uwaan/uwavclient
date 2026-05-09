@@ -155,6 +155,8 @@ void LocalConfig::Save(Ui::UwaVClient *ui, bool skipHistory)
     bool setInDevice = false;
     bool setOutDevice = false;
     bool setServerHistory = false;
+    bool setInferDevice = false;
+    bool setModel = false;
 
     if (newConfigStream.is_open())
     {
@@ -218,6 +220,36 @@ void LocalConfig::Save(Ui::UwaVClient *ui, bool skipHistory)
                         newConfigStream << nextLine << "\n";
                     }
                 }
+                else if (keyval.first == "inferDevice")
+                {
+                    setInferDevice = true;
+
+                    if (ui != nullptr)
+                    {
+                        if (!ui->comboInferDevice->currentText().isEmpty())
+                            config.inferDevice = ui->comboInferDevice->currentText().toStdString();
+                    }
+
+                    if (keyval.second != config.inferDevice)
+                        newConfigStream << "inferDevice=" << config.inferDevice << "\n";
+                    else
+                        newConfigStream << nextLine << "\n";
+                }
+                else if (keyval.first == "modelName")
+                {
+                    setModel = true;
+
+                    if (ui != nullptr)
+                    {
+                        if (!ui->comboModel->currentText().isEmpty())
+                            config.modelName = ui->comboModel->currentText().toStdString();
+                    }
+
+                    if (keyval.second != config.modelName)
+                        newConfigStream << "modelName=" << config.modelName << "\n";
+                    else
+                        newConfigStream << nextLine << "\n";
+                }
                 else
                 {
                     // This line was not one of the things that need to be written -
@@ -240,6 +272,14 @@ void LocalConfig::Save(Ui::UwaVClient *ui, bool skipHistory)
         if (!setOutDevice)
         {
             newConfigStream << "outputDevice=" << config.outputDevice << "\n";
+        }
+        if (!setInferDevice)
+        {
+            newConfigStream << "inferDevice=" << config.inferDevice << "\n";
+        }
+        if (!setModel)
+        {
+            newConfigStream << "modelName=" << config.modelName << "\n";
         }
         if (!setServerHistory)
         {
@@ -397,6 +437,30 @@ void LocalConfig::Load(Ui::UwaVClient *ui)
                     ui->comboServerSelect->blockSignals(false);
                 }
             }
+            else if (keyval.first == "inferDevice" && keyval.second != "none")
+            {
+                config.inferDevice = keyval.second;
+                if (ui != nullptr)
+                {
+                    // Client has almost certainly not connected to get a list of
+                    // available infer devices yet.
+                    ui->comboInferDevice->blockSignals(true);
+                    ui->comboInferDevice->setCurrentText(QString::fromStdString(config.inferDevice));
+                    ui->comboInferDevice->blockSignals(false);
+                }
+            }
+            else if (keyval.first == "modelName" && keyval.second != "none")
+            {
+                config.modelName = keyval.second;
+                if (ui != nullptr)
+                {
+                    // Client has almost certainly not connected to get a list of
+                    // available infer devices yet.
+                    ui->comboModel->blockSignals(true);
+                    ui->comboModel->setCurrentText(QString::fromStdString(config.modelName));
+                    ui->comboModel->blockSignals(false);
+                }
+            }
         }
     }
     else
@@ -443,7 +507,12 @@ std::pair<std::string, std::string> LocalConfig::ParseLine(std::string &cfgLine)
             removeLeading(kv.second);
 
             // Quick validation
-            if (kv.first != "uid" && kv.first != "previousServers" && kv.first != "inputDevice" && kv.first != "outputDevice")
+            if (kv.first != "uid"
+                && kv.first != "previousServers"
+                && kv.first != "inputDevice"
+                && kv.first != "outputDevice"
+                && kv.first != "inferDevice"
+                && kv.first != "modelName")
             {
                 qWarning("UNKNOWN KEY (%s) IN CONFIG!", kv.first.c_str());
                 return {"", ""};
@@ -458,10 +527,17 @@ std::string LocalConfig::GetSavedInputDevice()
 {
     return config.inputDevice;
 }
-
 std::string LocalConfig::GetSavedOutputDevice()
 {
     return config.outputDevice;
+}
+std::string LocalConfig::GetSavedInferDevice()
+{
+    return config.inferDevice;
+}
+std::string LocalConfig::GetSavedModelName()
+{
+    return config.modelName;
 }
 
 void LocalConfig::SetSavedInputDevice(std::string name)
@@ -471,6 +547,14 @@ void LocalConfig::SetSavedInputDevice(std::string name)
 void LocalConfig::SetSavedOutputDevice(std::string name)
 {
     config.outputDevice = name;
+}
+void LocalConfig::SetSavedInferDevice(std::string name)
+{
+    config.inferDevice = name;
+}
+void LocalConfig::SetSavedModelName(std::string name)
+{
+    config.modelName = name;
 }
 
 std::string LocalConfig::GetClientID()

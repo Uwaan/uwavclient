@@ -557,9 +557,10 @@ void UwaVClient::onSioSocketOpen(std::string const &nSpace)
     // give the server a second to respond to us.
     sleep(1);
 
-    sioClient.socket()->Emit("GET_MODELS");
     sioClient.socket()->Emit("GET_DEVICES");
     sioClient.socket()->Emit("GET_STATUS");
+    sioClient.socket()->Emit("GET_MODELS");
+    sioClient.socket()->Emit("GET_COMPUTE");
 
     // Ping w timestamp, in milliseconds since system epoch
     // (NOT clock time - only measuring delta later)
@@ -954,19 +955,53 @@ void UwaVClient::onSioMessage(std::string const &name, sio::message::list const 
 
         std::map keyvals = messages.at(0)->get_map();
         std::vector v = keyvals["models"]->get_vector();
-        QString prevSelection = ui->comboModel->currentText();
-        QString newItem = "";
+        std::string prevSelection;
+        int i;
+
         ui->comboModel->clear();
+
+        if (!ui->comboModel->currentText().isEmpty())
+        {
+            // Selected item overrides saved item
+            prevSelection = ui->comboModel->currentText().toStdString();
+        }
+
+        // Parse list of models provided
+        // TODO: check that inference is not running, etc -
+        // dont want to change this while it's running
         for (sio::message::ptr msg : v)
         {
-            // Parse list of models provided
-            // TODO: check that inference is not running, etc -
-            // dont want to change this while it's running
-            newItem = QString::fromStdString(sioToString(msg));
-            ui->comboModel->addItem(newItem);
-            if (newItem == prevSelection)
+            ui->comboModel->addItem(QString::fromStdString(sioToString(msg)));
+        }
+
+        if (!ui->comboModel->currentText().isEmpty())
+        {
+            // First try to match current selection
+            prevSelection = ui->comboModel->currentText().toStdString();
+
+            for (i = 0; i < ui->comboModel->count(); i++)
             {
-                ui->comboModel->setCurrentIndex(ui->comboModel->count()-1);
+                if (ui->comboModel->itemText(i).toStdString() == prevSelection)
+                {
+                    ui->comboModel->setCurrentIndex(i);
+                    break;
+                }
+            }
+        }
+
+        if (ui->comboModel->currentIndex() == -1 && !savedConfig->GetSavedModelName().empty())
+        {
+            // If current selection not yet set, attempt again with
+            // saved model (if any)
+            prevSelection = savedConfig->GetSavedModelName();
+
+            for (i = 0; i < ui->comboModel->count(); i++)
+            {
+                if (ui->comboModel->itemText(i).toStdString() == prevSelection)
+                {
+                    ui->comboModel->setCurrentIndex(i);
+                    break;
+                }
             }
         }
     }
@@ -984,7 +1019,7 @@ void UwaVClient::onSioMessage(std::string const &name, sio::message::list const 
         {
             if (msg->get_flag() == sio::message::flag_string)
             {
-                qInfo() << "Server reported input device: " << sioToString(msg).c_str();
+                qInfo("Server reported input device: %s", sioToString(msg).c_str());
             }
         }
         v = keyvals["output"]->get_vector();
@@ -992,7 +1027,7 @@ void UwaVClient::onSioMessage(std::string const &name, sio::message::list const 
         {
             if (msg->get_flag() == sio::message::flag_string)
             {
-                qInfo() << "Server reported output device: " << sioToString(msg).c_str();
+                qInfo("Server reported output device: %s", sioToString(msg).c_str());
             }
         }
         /*
@@ -1000,6 +1035,43 @@ void UwaVClient::onSioMessage(std::string const &name, sio::message::list const 
         {
             qInfo() << kv.first.c_str() << ": " << sioToString(kv.second).c_str();
         }*/
+    }
+    else if (name == "LIST_COMPUTE")
+    {
+        if (messages.at(0)->get_flag() != sio::message::flag_object)
+        {
+            qCritical("Unexpected input from LIST_COMPUTE event.");
+            return;
+        }
+
+        std::map keyvals = messages.at(0)->get_map();
+        if (keyvals.empty()) return;
+        std::vector v = keyvals["devices"]->get_vector();
+        std::string device;
+
+        ui->comboInferDevice->blockSignals(true);
+        ui->comboInferDevice->clear();
+        for (sio::message::ptr msg : v)
+        {
+            if (msg->get_flag() == sio::message::flag_string)
+            {
+                device = sioToString(msg);
+                qInfo("Server reported infer device: %s", device.c_str());
+                ui->comboInferDevice->addItem(QString::fromStdString(device));
+            }
+        }
+
+        // Should see if the client saved a preferred compute device
+        // bc it got loaded before the combo box was populated
+        for (int i = 0; i < ui->comboInferDevice->count(); i++)
+        {
+            if (ui->comboInferDevice->itemText(i) == savedConfig->GetSavedInferDevice())
+            {
+                ui->comboInferDevice->setCurrentIndex(i);
+                break;
+            }
+        }
+        ui->comboInferDevice->blockSignals(false);
     }
     else if (name == "MODEL_LOAD_SUCCESS")
     {
@@ -1995,6 +2067,28 @@ void UwaVClient::on_buttonServerExit_clicked()
     if (sioClient.opened())
     {
         sioClient.socket()->Emit("SERVER_REQUEST_EXIT");
+    }
+}
+
+
+void UwaVClient::on_comboInferDevice_currentIndexChanged(int index)
+{
+    if (sioClient.opened())
+    {
+        sio::message::ptr m = sio::object_message::create();
+        m->get_map()["infer_device"] = sio::string_message::create(ui->comboInferDevice->itemText(index).toStdString());
+        sioClient.socket()->Emit("SET_COMPUTE", sio::message::list(m));
+    }
+}
+
+
+void UwaVClient::on_comboModel_currentIndexChanged(int index)
+{
+    if (sioClient.opened())
+    {
+        sio::message::ptr m = sio::object_message::create();
+        m->get_map()["model_name"] = sio::string_message::create(ui->comboModel->itemText(index).toStdString());
+        sioClient.socket()->Emit("MODEL_LOAD", sio::message::list(m));
     }
 }
 
