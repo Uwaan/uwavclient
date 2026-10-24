@@ -35,6 +35,7 @@ private:
     struct u_ConfigData config;
 
     std::pair<std::string, std::string> ParseLine(std::string &cfgLine);
+    std::string ServerHistoryString(Ui::UwaVClient *ui);
     std::string GenerateLocalUID();
 };
 

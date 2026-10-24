@@ -196,24 +196,7 @@ void LocalConfig::Save(Ui::UwaVClient *ui, bool skipHistory)
 
                     if (ui != nullptr && !skipHistory)
                     {
-                        int numEntries = ui->comboServerSelect->count();
-                        if (numEntries > U_SAVE_PREV_SERVERS) numEntries = U_SAVE_PREV_SERVERS;
-
-                        newConfigStream << "previousServers=";
-
-                        for (int i = numEntries - 1; i >= 0; i--)
-                        {
-                            newConfigStream << ui->comboServerSelect->itemText(i).toStdString() << ";";
-                        }
-
-                        if (numEntries == 0)
-                        {
-                            newConfigStream << "none\n";
-                        }
-                        else
-                        {
-                            newConfigStream << "\n";
-                        }
+                        newConfigStream << "previousServers=" << ServerHistoryString(ui) << "\n";
                     }
                     else
                     {
@@ -283,44 +266,10 @@ void LocalConfig::Save(Ui::UwaVClient *ui, bool skipHistory)
         }
         if (!setServerHistory)
         {
-            int i = 0;
-
-            newConfigStream << "previousServers=";
             if (ui != nullptr && !skipHistory)
-            {
-                int numEntries = ui->comboServerSelect->count();
-                if (numEntries > U_SAVE_PREV_SERVERS) numEntries = U_SAVE_PREV_SERVERS;
-
-                newConfigStream << "previousServers=";
-
-                for (int i = numEntries - 1; i >= 0; i--)
-                {
-                    newConfigStream << ui->comboServerSelect->itemText(i).toStdString() << ";";
-                }
-
-                if (numEntries == 0)
-                {
-                    newConfigStream << "none\n";
-                }
-                else
-                {
-                    newConfigStream << "\n";
-                }
-            }
-            else if (!skipHistory)
-            {
-                newConfigStream << "previousServers=none\n";
-            }
-
-            if (i == 0)
-            {
-                // Didn't find any items in combo box
-                newConfigStream << "none\n";
-            }
+                newConfigStream << "previousServers=" << ServerHistoryString(ui) << "\n";
             else
-            {
-                newConfigStream << "\n";
-            }
+                newConfigStream << "previousServers=none\n";
         }
 
         // All items have been written
@@ -332,6 +281,35 @@ void LocalConfig::Save(Ui::UwaVClient *ui, bool skipHistory)
     {
         qWarning("Unable to open settings file for saving.");
     }
+}
+
+// Builds the ';'-separated server history, most recent first.
+// The server currently in use goes at the front, followed by the
+// rest of the combo box entries in their existing order (which is
+// the order they were loaded in, plus any newly typed entries that
+// QComboBox appended to the bottom).
+std::string LocalConfig::ServerHistoryString(Ui::UwaVClient *ui)
+{
+    QStringList servers;
+    QString current = ui->comboServerSelect->currentText().trimmed();
+
+    if (!current.isEmpty())
+        servers.append(current);
+
+    for (int i = 0; i < ui->comboServerSelect->count() && servers.size() < U_SAVE_PREV_SERVERS; i++)
+    {
+        QString entry = ui->comboServerSelect->itemText(i).trimmed();
+        if (!entry.isEmpty() && !servers.contains(entry))
+            servers.append(entry);
+    }
+
+    if (servers.isEmpty())
+        return "none";
+
+    std::string out;
+    for (const QString &entry : servers)
+        out += entry.toStdString() + ";";
+    return out;
 }
 
 // Attempt to load any saved preferences from disk (user's home

@@ -1343,6 +1343,10 @@ void UwaVClient::on_DeviceListsReady()
     // Should only be called once, near program start but after UI
     // is up and objects have been created.
     savedConfig->Load(ui);
+
+    // (Populating the lists changes the size of the window)
+    centralWidget()->layout()->activate();
+    resize(size().expandedTo(sizeHint()));
 }
 
 /***********************************************************************************
