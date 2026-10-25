@@ -1248,6 +1248,12 @@ void UwaVClient::onSamplesReceived(const sio::message::ptr &msg)
 {
     // Samples received get em ready for the sound card!!!!
 
+    if (!serverStarted || !audio->outStreamConnected)
+    {
+        // Unless we're not in an audio-outputting state,
+        return;
+    }
+
     // ...This is a complicated payload.
     int reportedSampleRate = 0;
     int reportedSampleNum = 0;
