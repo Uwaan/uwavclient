@@ -902,8 +902,6 @@ u_RingBuffer *u_AudioProvider::inBuffer()
 }
 u_RingBuffer *u_AudioProvider::outBuffer()
 {
-    // TODO: BUG: This gets triggered if server crashes/disconnects, then audio is
-    // started, then audio is stopped
     assert(pwOutputData.buffer != nullptr && "Attempted to access nonexistent output buffer!");
     return pwOutputData.buffer;
 }

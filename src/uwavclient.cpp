@@ -276,6 +276,13 @@ bool UwaVClient::ValidateStartStopState()
  * source buffer has been written to. */
 void UwaVClient::onInputBufferWrite()
 {
+    if (!audio->inStreamConnected)
+    {
+        // (Was getting occasional crashes when stopping audio,
+        // looks like buffered audio after disconnect was the
+        // culprit
+        return;
+    }
     // Received notification that new data from the local microphone
     // is in the buffer.
 
@@ -289,7 +296,7 @@ void UwaVClient::onInputBufferWrite()
     // messages, but the minimum (20ms) @ 48KHz results in 960
     // samples which is 3.84kb of payload, 50 times a second.
 
-    // During test runs, pipewire seems to like triggering its callback
+    // Pipewire seems to like triggering its callback
     // 1024 samples at a time, so there is jitter, but it is very
     // predictable
 
