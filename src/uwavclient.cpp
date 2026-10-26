@@ -962,16 +962,18 @@ void UwaVClient::onSioMessage(std::string const &name, sio::message::list const 
 
         std::map keyvals = messages.at(0)->get_map();
         std::vector v = keyvals["models"]->get_vector();
-        std::string prevSelection;
+        std::string prevSelection = "";
         int i;
 
-        ui->comboModel->clear();
+        ui->comboModel->blockSignals(true);
 
         if (!ui->comboModel->currentText().isEmpty())
         {
             // Selected item overrides saved item
             prevSelection = ui->comboModel->currentText().toStdString();
         }
+
+        ui->comboModel->clear();
 
         // Parse list of models provided
         // TODO: check that inference is not running, etc -
@@ -981,20 +983,27 @@ void UwaVClient::onSioMessage(std::string const &name, sio::message::list const 
             ui->comboModel->addItem(QString::fromStdString(sioToString(msg)));
         }
 
-        if (!ui->comboModel->currentText().isEmpty())
+        // addItem automatically switches the current item to the first index
+        // it adds, it turns out, so switch it back
+        ui->comboModel->setCurrentIndex(-1);
+
+        if (prevSelection != "")
         {
-            // First try to match current selection
-            prevSelection = ui->comboModel->currentText().toStdString();
+            // First try to match old selection
+            //prevSelection = ui->comboModel->currentText().toStdString();
 
             for (i = 0; i < ui->comboModel->count(); i++)
             {
                 if (ui->comboModel->itemText(i).toStdString() == prevSelection)
                 {
                     ui->comboModel->setCurrentIndex(i);
+
                     break;
                 }
             }
         }
+
+        ui->comboModel->blockSignals(false);
 
         if (ui->comboModel->currentIndex() == -1 && !savedConfig->GetSavedModelName().empty())
         {
@@ -1009,6 +1018,14 @@ void UwaVClient::onSioMessage(std::string const &name, sio::message::list const 
                     ui->comboModel->setCurrentIndex(i);
                     break;
                 }
+            }
+        }
+        else if (ui->comboModel->currentIndex() == -1 && savedConfig->GetSavedModelName().empty())
+        {
+            // No saved selection, set to the first available model
+            if (ui->comboModel->count() > 0)
+            {
+                ui->comboModel->setCurrentIndex(0);
             }
         }
     }
