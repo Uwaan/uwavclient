@@ -1400,8 +1400,10 @@ void UwaVClient::on_InputLevelChanged(float level)
 
         // Have had some issues with level != 0, but log10
         // still coming out to NaN (as if computing log(0))
+        // ** now fixed? can remove 'if' as long as the message never fires
         if (level != level) // NaN unless -ffast-math
         {
+            qCritical("RMS is still NaN you dingus");
             ui->labelInLevel->setText("--");
             ui->progressBarInLevel->setValue(0);
         }

@@ -1050,13 +1050,37 @@ void u_AudioProvider::onProcessOutput(void *streamStruct)
     // spa_buffer::maxsize.
     numSamples = spaBuffer->datas[0].maxsize / sizeof(float);
     //qInfo("onProcessOutput: Buffer requesting %lu of samples, can hold max %i. Write-ahead is %i.", pwBuffer->requested, numSamples, data->buffer->getWriteAheadLength());
-
     if (pwBuffer->requested)
     {
         numSamples = SPA_MIN(pwBuffer->requested, numSamples);
     }
-    numSamples = SPA_MIN(data->buffer->getWriteAheadLength(), numSamples);
-    data->buffer->readAudioData(samples, numSamples);
+
+    // Redoing this - instead of letting the buffer underrun, which pipewire
+    // does handle gracefully, zero-fill the buffer here
+    //numSamples = SPA_MIN(data->buffer->getWriteAheadLength(), numSamples);
+    //data->buffer->readAudioData(samples, numSamples);
+    int writeAhead = data->buffer->getWriteAheadLength();   // length CAN increase between if/else branches and cause overflow
+    if (writeAhead <= 0)
+    {
+        for (int i = 0; i < numSamples; i++)
+        {
+            samples[i] = 0.0f;
+        }
+    }
+    else if (numSamples <= writeAhead)
+    {
+        data->buffer->readAudioData(samples, numSamples);
+    }
+    else
+    {
+        // Fewer samples in the ring buffer than requested. Partial
+        // zero pad
+        data->buffer->readAudioData(samples, writeAhead);
+        for (int i = writeAhead; i < numSamples; i++)
+        {
+            samples[i] = 0.0f;
+        }
+    }
 
     // Amplify + calculate RMS for this chunk
     sum = 0.0f;
@@ -1066,6 +1090,7 @@ void u_AudioProvider::onProcessOutput(void *streamStruct)
         samples[n] *= outputGain;
         sum += samples[n] * samples[n]; // Square
     }
+
     rms = sqrt(sum/static_cast<float>(numSamples)); // Root, Mean
 
     data->currentTicks--;
