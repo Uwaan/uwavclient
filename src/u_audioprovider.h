@@ -67,9 +67,9 @@ public:
     inline static std::atomic<int> gateClosingTail = 24000;
     inline static std::atomic<float> inputGain = 1.0;
     inline static std::atomic<float> outputGain = 1.0;
-    inline static bool inStreamConnected = false;
-    inline static bool outStreamConnected = false;
-    inline static bool threadRunning = false;
+    inline static std::atomic<bool> inStreamConnected = false;
+    inline static std::atomic<bool> outStreamConnected = false;
+    inline static std::atomic<bool> threadRunning = false;
     u_EngineStatistics *signaler;
 
     u_RingBuffer *inBuffer();
@@ -92,7 +92,7 @@ public:
     static void onCoreDone(void *roundtripStruct, uint32_t id, int seq);
     /* End Callbacks */
 
-    QStringList *GetDeviceList(bool useInputList);
+    QStringList GetDeviceList(bool useInputList);
     QString GetDeviceNameFromID(int deviceListIndex, bool useInputList);
 
     void SetInputGate(int dbfs = 0);

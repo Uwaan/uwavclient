@@ -189,8 +189,14 @@ u_AudioProvider::~u_AudioProvider()
 
     delete(signaler);
 
-    if (currentInputDevice->isOrphan) delete currentInputDevice;
-    if (currentOutputDevice->isOrphan) delete currentOutputDevice;
+    if (currentInputDevice != nullptr)
+    {
+        if (currentInputDevice->isOrphan) delete currentInputDevice;
+    }
+    if (currentOutputDevice != nullptr)
+    {
+        if (currentOutputDevice->isOrphan) delete currentOutputDevice;
+    }
 
     // Same as above, this will screw up if Init()
     // was never called
@@ -809,27 +815,25 @@ void u_AudioProvider::ServerRequestedInSampleRate(uint32_t sr)
 }
 
 // Creates a list of available devices, presumably for display in the UI
- QStringList *u_AudioProvider::GetDeviceList(bool useInputList)
+ QStringList u_AudioProvider::GetDeviceList(bool useInputList)
 {
-    QStringList *list = new QStringList();
+    QStringList list;
 
     if (useInputList)
     {
         for (u_InterfaceDescriptor &item : *inputDeviceList)
         {
-            list->push_back(QString::fromStdString(item.device_desc));
+            list.push_back(QString::fromStdString(item.device_desc));
         }
     }
     else
     {
         for (u_InterfaceDescriptor &item : *outputDeviceList)
         {
-            list->push_back(QString::fromStdString(item.device_desc));
+            list.push_back(QString::fromStdString(item.device_desc));
         }
     }
 
-    // TODO: Check for memory leaks in parent. Not sure if dereferencing
-    // a 'new' downstream to give it to the Qt framework is safe
     return list;
 }
 
@@ -1304,7 +1308,7 @@ void u_AudioProvider::onInputStreamChanged(void *streamStruct, enum pw_stream_st
 
         inStreamConnected = true;
         data->isRunning = true;
-        if (currentOutputDevice == nullptr || (currentOutputDevice != nullptr && inStreamConnected))
+        if (currentOutputDevice == nullptr || (currentOutputDevice != nullptr && outStreamConnected))
         {
             data->eStats->streamStarted();
         }

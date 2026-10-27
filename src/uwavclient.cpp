@@ -1364,10 +1364,10 @@ void UwaVClient::on_DeviceListsReady()
     // the audio class, so it is safe to assume this is the
     // first population & we don't need to do any list juggling
     // at this stage.
-    ui->comboAudioSinkLocal->addItems(*audio->GetDeviceList(false));
+    ui->comboAudioSinkLocal->addItems(audio->GetDeviceList(false));
     ui->comboAudioSinkLocal->addItem("Output Audio on Server"); // Placeholder, relied on by LocalConfig
 
-    ui->comboAudioSrcLocal->addItems(*audio->GetDeviceList(true));
+    ui->comboAudioSrcLocal->addItems(audio->GetDeviceList(true));
     ui->comboAudioSrcLocal->addItem("Input Audio on Server");   // Placeholder, relied on by LocalConfig
 
     // Should only be called once, near program start but after UI
@@ -1596,14 +1596,14 @@ void UwaVClient::on_comboAudioSrcLocal_currentIndexChanged(int index)
     }
     else if (index == ui->comboAudioSrcLocal->count() - 1)
     {
-        // TODO: Set output to stream over network instead, deactivate
+        // TODO: Set input to stream over network instead, deactivate
         // local audio stuff if applicable
 
         audio->SetActiveInput(-1);
 
         primaryInputDeviceNum = index;
         primaryInputDeviceName = "TODO: Populate network device names";
-        primaryInputDeviceDesc = "(Audio will output on the server)";
+        primaryInputDeviceDesc = "(Audio will input from the server)";
 
         savedConfig->SetSavedInputDevice("server");
     }

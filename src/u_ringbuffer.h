@@ -13,7 +13,7 @@ public:
     int bufferSize;         // # elements
     int sampleRate;
     int prefillNumSamples;
-    bool prefillComplete = false;
+    std::atomic<bool> prefillComplete = false;
 
     u_RingBuffer(int sampleRate);
     ~u_RingBuffer();

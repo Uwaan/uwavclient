@@ -41,7 +41,7 @@ u_RingBuffer::u_RingBuffer(int sampleRate)
 
 u_RingBuffer::~u_RingBuffer()
 {
-    delete(buffer);
+    delete[](buffer);
 }
 
 void u_RingBuffer::writeAudioData(const float *samples, int count)
